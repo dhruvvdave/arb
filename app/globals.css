@@ -1,0 +1,64 @@
+@import "tailwindcss";
+
+@theme inline {
+  --font-sans: ui-sans-serif, system-ui, sans-serif;
+  --font-mono: ui-monospace, Menlo, Monaco, "Cascadia Mono", "Segoe UI Mono", monospace;
+}
+
+@layer theme {
+  :root {
+    --color-background: oklch(100% 0 0);
+    --color-foreground: oklch(16% 0 0);
+    --color-card: oklch(100% 0 0);
+    --color-card-foreground: oklch(16% 0 0);
+    --color-popover: oklch(100% 0 0);
+    --color-popover-foreground: oklch(16% 0 0);
+    --color-primary: oklch(24% 0 0);
+    --color-primary-foreground: oklch(98% 0 0);
+    --color-secondary: oklch(97% 0 0);
+    --color-secondary-foreground: oklch(24% 0 0);
+    --color-muted: oklch(97% 0 0);
+    --color-muted-foreground: oklch(52% 0 0);
+    --color-accent: oklch(97% 0 0);
+    --color-accent-foreground: oklch(24% 0 0);
+    --color-destructive: oklch(60% 0.2 25);
+    --color-destructive-foreground: oklch(98% 0 0);
+    --color-border: oklch(91% 0 0);
+    --color-input: oklch(91% 0 0);
+    --color-ring: oklch(16% 0 0);
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    --color-background: oklch(16% 0 0);
+    --color-foreground: oklch(98% 0 0);
+    --color-card: oklch(20% 0 0);
+    --color-card-foreground: oklch(98% 0 0);
+    --color-popover: oklch(20% 0 0);
+    --color-popover-foreground: oklch(98% 0 0);
+    --color-primary: oklch(98% 0 0);
+    --color-primary-foreground: oklch(24% 0 0);
+    --color-secondary: oklch(28% 0 0);
+    --color-secondary-foreground: oklch(98% 0 0);
+    --color-muted: oklch(28% 0 0);
+    --color-muted-foreground: oklch(66% 0 0);
+    --color-accent: oklch(28% 0 0);
+    --color-accent-foreground: oklch(98% 0 0);
+    --color-destructive: oklch(40% 0.2 25);
+    --color-destructive-foreground: oklch(98% 0 0);
+    --color-border: oklch(28% 0 0);
+    --color-input: oklch(28% 0 0);
+    --color-ring: oklch(85% 0 0);
+  }
+}
+
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
+  body {
+    background: var(--color-background);
+    color: var(--color-foreground);
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+}
