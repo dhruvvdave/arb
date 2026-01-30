@@ -90,7 +90,7 @@ function generatePlayer(sport: Sport): PlayerInfo {
 }
 
 function generateSportsbookLines(baseOdds: number, count: number = 5) {
-  const books = [...ONTARIO_SPORTSBOOKS].sort(() => Math.random() - 0.5).slice(0, count);
+  const books = [...ONTARIO_SPORTSBOOKS].sort(() => Math.random() - 0.5).slice(0, count) as OntarioSportsbook[];
   
   return books.map(book => ({
     sportsbook: book,
@@ -253,7 +253,7 @@ export function generateParlays(count: number = 5): Parlay[] {
       riskTier: numLegs === 2 ? 'Low' : numLegs === 3 ? 'Medium' : numLegs === 4 ? 'High' : 'Spicy',
       correlationWarnings: correlationFactor < 0.95 ? ['Some legs may be negatively correlated'] : [],
       reasoning: `This ${numLegs}-leg parlay combines high-confidence props with ${correlationFactor < 0.95 ? 'minimal' : 'low'} correlation risk.`,
-      bestBook: randomElement(ONTARIO_SPORTSBOOKS),
+      bestBook: randomElement([...ONTARIO_SPORTSBOOKS]) as OntarioSportsbook,
       createdAt: new Date(Date.now() - randomInt(10, 300) * 60 * 1000),
     });
   }
@@ -270,7 +270,7 @@ function decimalToAmerican(decimal: number): number {
 }
 
 export function generatePlayerStats(playerId: string, sport: Sport): PlayerStats {
-  const baseStats = sport === 'NBA' 
+  const baseStats: Record<string, number> = sport === 'NBA' 
     ? { points: 24.5, rebounds: 6.8, assists: 5.2, steals: 1.3, blocks: 0.8, '3pm': 2.1 }
     : { goals: 0.8, assists: 1.2, points: 2.0, shots: 3.5, hits: 2.8 };
   
@@ -299,7 +299,7 @@ export function generatePlayerStats(playerId: string, sport: Sport): PlayerStats
     },
     trends: Object.keys(baseStats).map(stat => ({
       stat,
-      values: Array.from({ length: 10 }, () => baseStats[stat as keyof typeof baseStats] + randomFloat(-3, 3, 1)),
+      values: Array.from({ length: 10 }, () => baseStats[stat] + randomFloat(-3, 3, 1)),
       dates: Array.from({ length: 10 }, (_, i) => new Date(Date.now() - (9 - i) * 24 * 60 * 60 * 1000)),
     })),
   };
