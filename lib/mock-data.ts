@@ -34,6 +34,9 @@ class SeededRandom {
 
 const rng = new SeededRandom(12345); // Fixed seed for deterministic output
 
+// Fixed base timestamp for deterministic date generation (avoids hydration mismatches)
+const BASE_TIMESTAMP = 1704067200000; // Jan 1, 2024 00:00:00 UTC
+
 const NBA_TEAMS = [
   'Lakers', 'Celtics', 'Warriors', 'Bucks', 'Heat', 'Nuggets', 'Suns', '76ers',
   'Mavericks', 'Clippers', 'Knicks', 'Nets', 'Raptors', 'Bulls', 'Hawks', 'Cavaliers'
@@ -76,7 +79,7 @@ function randomFloat(min: number, max: number, decimals: number = 1): number {
 }
 
 function generateGameId(): string {
-  return `game_${Date.now()}_${randomInt(1000, 9999)}`;
+  return `game_${BASE_TIMESTAMP}_${randomInt(1000, 9999)}`;
 }
 
 function generateGame(sport: Sport): GameInfo {
@@ -92,7 +95,7 @@ function generateGame(sport: Sport): GameInfo {
     sport,
     homeTeam,
     awayTeam,
-    startTime: new Date(Date.now() + randomInt(1, 48) * 60 * 60 * 1000),
+    startTime: new Date(BASE_TIMESTAMP + randomInt(1, 48) * 60 * 60 * 1000),
   };
 }
 
@@ -115,7 +118,7 @@ function generateSportsbookLines(baseOdds: number, count: number = 5) {
   return books.map(book => ({
     sportsbook: book,
     odds: createOddsObject(baseOdds + randomInt(-15, 15)),
-    lastUpdated: new Date(Date.now() - randomInt(1, 60) * 60 * 1000),
+    lastUpdated: new Date(BASE_TIMESTAMP - randomInt(1, 60) * 60 * 1000),
   }));
 }
 
@@ -148,7 +151,7 @@ export function generateEVOpportunities(count: number = 10): EVOpportunity[] {
       slippageAdjustedEV,
       bestBook: lines[0].sportsbook,
       game,
-      detectedAt: new Date(Date.now() - randomInt(1, 120) * 60 * 1000),
+      detectedAt: new Date(BASE_TIMESTAMP - randomInt(1, 120) * 60 * 1000),
       stabilityScore: randomInt(60, 95),
       volatilityScore: randomInt(10, 40),
     });
@@ -233,7 +236,7 @@ export function generatePropOpportunities(count: number = 15): PropOpportunity[]
       context,
       estimatedEV: ev,
       confidence: ev > 6 ? 'High' : ev > 3 ? 'Medium' : 'Low',
-      detectedAt: new Date(Date.now() - randomInt(5, 180) * 60 * 1000),
+      detectedAt: new Date(BASE_TIMESTAMP - randomInt(5, 180) * 60 * 1000),
       insight: rng.next() > 0.5 ? `${player.name} has hit this in ${Math.floor(atLineRate * 10)} of last 10 games. ${context.defenseVsPosition <= 10 ? 'Opponent ranks bottom 10 vs ' + player.position + 's.' : ''}` : undefined,
     });
   }
@@ -277,7 +280,7 @@ export function generateParlays(count: number = 5): Parlay[] {
       correlationWarnings: correlationFactor < 0.95 ? ['Some legs may be negatively correlated'] : [],
       reasoning: `This ${numLegs}-leg parlay combines high-confidence props with ${correlationFactor < 0.95 ? 'minimal' : 'low'} correlation risk.`,
       bestBook: randomElement([...ONTARIO_SPORTSBOOKS]) as OntarioSportsbook,
-      createdAt: new Date(Date.now() - randomInt(10, 300) * 60 * 1000),
+      createdAt: new Date(BASE_TIMESTAMP - randomInt(10, 300) * 60 * 1000),
     });
   }
   
@@ -324,7 +327,7 @@ export function generatePlayerStats(playerId: string, sport: Sport): PlayerStats
     trends: Object.keys(baseStats).map(stat => ({
       stat,
       values: Array.from({ length: 10 }, () => baseStats[stat] + randomFloat(-3, 3, 1)),
-      dates: Array.from({ length: 10 }, (_, i) => new Date(Date.now() - (9 - i) * 24 * 60 * 60 * 1000)),
+      dates: Array.from({ length: 10 }, (_, i) => new Date(BASE_TIMESTAMP - (9 - i) * 24 * 60 * 60 * 1000)),
     })),
   };
 }
@@ -356,7 +359,7 @@ export function generateAlerts(count: number = 5): Alert[] {
     type: randomElement(['ev_threshold', 'stable_line', 'volatility_low', 'odds_moved'] as const),
     opportunity: opp,
     message: `${opp.description} - ${opp.estimatedEV > 0 ? '+' : ''}${opp.estimatedEV.toFixed(1)}% EV detected`,
-    timestamp: new Date(Date.now() - randomInt(1, 60) * 60 * 1000),
+    timestamp: new Date(BASE_TIMESTAMP - randomInt(1, 60) * 60 * 1000),
     read: rng.next() > 0.5,
   }));
 }

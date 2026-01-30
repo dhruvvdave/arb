@@ -192,13 +192,13 @@ Est. EV: ${prop.estimatedEV > 0 ? '+' : ''}${prop.estimatedEV.toFixed(1)}%`;
 }
 
 export default function PropsPage() {
-  const [sportFilter, setSportFilter] = useState<Sport | undefined>('NBA');
+  const [sportFilter, setSportFilter] = useState<Sport | undefined>();
   const [categoryFilter, setCategoryFilter] = useState<PropCategory | undefined>();
   const { useMockData } = usePreferencesStore();
 
-  // Fetch real data for NBA and NHL events
-  const nbaQuery = useProps('nba');
-  const nhlQuery = useProps('nhl');
+  // Fetch real data for NBA and NHL events (only when not in mock mode)
+  const nbaQuery = useProps('nba', undefined, !useMockData);
+  const nhlQuery = useProps('nhl', undefined, !useMockData);
 
   // Mock data fallback
   const mockProps = useMemo(() => generatePropOpportunities(20), []);

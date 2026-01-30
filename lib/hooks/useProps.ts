@@ -12,7 +12,7 @@ interface PropsResponse {
   };
 }
 
-export function useProps(sport: 'nba' | 'nhl', eventId?: string) {
+export function useProps(sport: 'nba' | 'nhl', eventId?: string, enabled: boolean = true) {
   return useQuery<PropsResponse>({
     queryKey: ['props', sport, eventId],
     queryFn: async () => {
@@ -26,7 +26,7 @@ export function useProps(sport: 'nba' | 'nhl', eventId?: string) {
       }
       return response.json();
     },
-    enabled: true, // Always enabled, but returns events list if no eventId
+    enabled, // Can be disabled when in mock mode
     refetchInterval: 60000,
     staleTime: 30000,
   });
