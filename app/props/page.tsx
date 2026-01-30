@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { EVBadge } from '@/components/ev-badge';
 import { generatePropOpportunities } from '@/lib/mock-data';
+import { useProps } from '@/lib/hooks/useProps';
 import { usePreferencesStore } from '@/lib/store/preferences';
 import { PropOpportunity, Sport, PropCategory } from '@/lib/types';
 import { formatOdds } from '@/lib/odds-calculator';
@@ -191,20 +192,43 @@ Est. EV: ${prop.estimatedEV > 0 ? '+' : ''}${prop.estimatedEV.toFixed(1)}%`;
 }
 
 export default function PropsPage() {
-  const [sportFilter, setSportFilter] = useState<Sport | undefined>();
+  const [sportFilter, setSportFilter] = useState<Sport | undefined>('NBA');
   const [categoryFilter, setCategoryFilter] = useState<PropCategory | undefined>();
   const { useMockData } = usePreferencesStore();
 
-  // Mock data only for now (real props API needs event-specific calls)
-  const allProps = useMemo(() => generatePropOpportunities(20), []);
+  // Fetch real data for NBA and NHL events
+  const nbaQuery = useProps('nba');
+  const nhlQuery = useProps('nhl');
+
+  // Mock data fallback
+  const mockProps = useMemo(() => generatePropOpportunities(20), []);
   
-  const filteredProps = useMemo(() => {
-    return allProps.filter(prop => {
+  const filteredMockProps = useMemo(() => {
+    return mockProps.filter(prop => {
       if (sportFilter && prop.game.sport !== sportFilter) return false;
       if (categoryFilter && prop.category !== categoryFilter) return false;
       return true;
     });
-  }, [allProps, sportFilter, categoryFilter]);
+  }, [mockProps, sportFilter, categoryFilter]);
+
+  // Use mock or real data based on preference
+  const isLoading = useMockData ? false : (nbaQuery.isLoading || nhlQuery.isLoading);
+  const error = useMockData ? null : (nbaQuery.error || nhlQuery.error);
+
+  // For now, we show available events or mock data
+  // Real prop opportunities would require event-specific API calls
+  const allProps = useMemo(() => {
+    if (useMockData) {
+      return filteredMockProps;
+    }
+    
+    // In live mode, we would need to:
+    // 1. Get events from nbaQuery/nhlQuery
+    // 2. For each event, fetch props
+    // 3. Extract prop opportunities
+    // For now, show mock data with a notice
+    return filteredMockProps;
+  }, [useMockData, filteredMockProps]);
 
   return (
     <div className="space-y-6">
@@ -218,24 +242,46 @@ export default function PropsPage() {
             Player prop analysis with historical context and insights
           </p>
         </div>
-        <Badge variant="secondary">Demo Data</Badge>
+        {useMockData && (
+          <Badge variant="secondary">Demo Mode</Badge>
+        )}
       </div>
 
-      {/* Info Notice */}
-      <Card className="border-blue-500/50 bg-blue-500/5">
-        <CardContent className="pt-6">
-          <div className="flex items-start gap-2">
-            <AlertCircle className="h-5 w-5 text-blue-500 mt-0.5" />
-            <div className="text-sm">
-              <p className="font-semibold text-blue-500">Demo Data Notice</p>
-              <p className="text-muted-foreground mt-1">
-                Player props require event-specific API calls. Currently showing demo data. 
-                Live props will be available once specific games are selected.
-              </p>
+      {/* Error Message */}
+      {error && (
+        <Card className="border-red-500/50 bg-red-500/5">
+          <CardContent className="pt-6">
+            <div className="flex items-start gap-2">
+              <AlertCircle className="h-5 w-5 text-red-500 mt-0.5" />
+              <div className="text-sm">
+                <p className="font-semibold text-red-500">Failed to fetch live data</p>
+                <p className="text-muted-foreground mt-1">
+                  {(error as Error)?.message || 'Unknown error occurred'}. 
+                  Enable Demo Mode in settings to continue using the app.
+                </p>
+              </div>
             </div>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Info Notice */}
+      {!useMockData && (
+        <Card className="border-blue-500/50 bg-blue-500/5">
+          <CardContent className="pt-6">
+            <div className="flex items-start gap-2">
+              <AlertCircle className="h-5 w-5 text-blue-500 mt-0.5" />
+              <div className="text-sm">
+                <p className="font-semibold text-blue-500">Props Data Notice</p>
+                <p className="text-muted-foreground mt-1">
+                  Player props require event-specific API calls and are currently in development. 
+                  Showing demo data. Full live props integration coming soon.
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Filters */}
       <Card>
@@ -278,16 +324,39 @@ export default function PropsPage() {
       <div>
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-xl font-semibold">
-            {filteredProps.length} Props Available
+            {isLoading ? (
+              'Loading...'
+            ) : (
+              `${allProps.length} Props Available`
+            )}
           </h2>
-          <Badge variant="outline">Live</Badge>
+          <Badge variant="outline">{useMockData ? 'Demo' : 'Live (Demo)'}</Badge>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          {filteredProps.map((prop) => (
-            <PropCard key={prop.id} prop={prop} />
-          ))}
-        </div>
+        {isLoading ? (
+          <Card>
+            <CardContent className="py-12 text-center">
+              <RefreshCw className="h-8 w-8 animate-spin mx-auto mb-4 text-muted-foreground" />
+              <p className="text-muted-foreground">
+                Fetching available games...
+              </p>
+            </CardContent>
+          </Card>
+        ) : allProps.length === 0 ? (
+          <Card>
+            <CardContent className="py-12 text-center">
+              <p className="text-muted-foreground">
+                No props match your current filters. Try adjusting your criteria.
+              </p>
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            {allProps.map((prop) => (
+              <PropCard key={prop.id} prop={prop} />
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
