@@ -3,12 +3,14 @@ import { persist } from 'zustand/middleware';
 import { UserPreferences, ONTARIO_SPORTSBOOKS } from '@/lib/types';
 
 interface PreferencesStore extends UserPreferences {
+  useMockData: boolean;
   setSelectedBooks: (books: typeof ONTARIO_SPORTSBOOKS[number][]) => void;
   setMinEVThreshold: (threshold: number) => void;
   setSports: (sports: UserPreferences['sports']) => void;
   setBetTypes: (types: UserPreferences['betTypes']) => void;
   setNotifications: (notifications: UserPreferences['notifications']) => void;
   toggleDarkMode: () => void;
+  toggleMockData: () => void;
   resetPreferences: () => void;
 }
 
@@ -25,10 +27,17 @@ const defaultPreferences: UserPreferences = {
   darkMode: true,
 };
 
+// Check if we should use mock data from env or default to true
+const getDefaultMockDataSetting = () => {
+  const envSetting = process.env.NEXT_PUBLIC_USE_MOCK_DATA;
+  return envSetting !== 'false'; // Default to true unless explicitly set to false
+};
+
 export const usePreferencesStore = create<PreferencesStore>()(
   persist(
     (set) => ({
       ...defaultPreferences,
+      useMockData: getDefaultMockDataSetting(),
       
       setSelectedBooks: (books) => set({ selectedBooks: books }),
       
@@ -42,7 +51,9 @@ export const usePreferencesStore = create<PreferencesStore>()(
       
       toggleDarkMode: () => set((state) => ({ darkMode: !state.darkMode })),
       
-      resetPreferences: () => set(defaultPreferences),
+      toggleMockData: () => set((state) => ({ useMockData: !state.useMockData })),
+      
+      resetPreferences: () => set({ ...defaultPreferences, useMockData: getDefaultMockDataSetting() }),
     }),
     {
       name: 'user-preferences',

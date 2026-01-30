@@ -15,12 +15,14 @@ export default function SettingsPage() {
     betTypes,
     notifications,
     darkMode,
+    useMockData,
     setSelectedBooks,
     setMinEVThreshold,
     setSports,
     setBetTypes,
     setNotifications,
     toggleDarkMode,
+    toggleMockData,
     resetPreferences,
   } = usePreferencesStore();
 
@@ -65,10 +67,10 @@ export default function SettingsPage() {
         <CardHeader>
           <div className="flex items-center gap-2">
             {darkMode ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />}
-            <CardTitle>Appearance</CardTitle>
+            <CardTitle>Appearance & Data</CardTitle>
           </div>
           <CardDescription>
-            Customize how BetIQ looks
+            Customize how BetIQ looks and where data comes from
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -85,6 +87,30 @@ export default function SettingsPage() {
             >
               {darkMode ? 'Enabled' : 'Disabled'}
             </Button>
+          </div>
+          
+          <div className="border-t pt-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="font-medium">Demo Mode</div>
+                <div className="text-sm text-muted-foreground">
+                  {useMockData 
+                    ? 'Using mock data for demonstration'
+                    : 'Using live data from The Odds API'}
+                </div>
+              </div>
+              <Button
+                variant={useMockData ? 'outline' : 'default'}
+                onClick={toggleMockData}
+              >
+                {useMockData ? 'Demo' : 'Live'}
+              </Button>
+            </div>
+            {!useMockData && (
+              <p className="text-xs text-muted-foreground mt-2">
+                Make sure your ODDS_API_KEY is configured in .env.local
+              </p>
+            )}
           </div>
         </CardContent>
       </Card>

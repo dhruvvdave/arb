@@ -5,9 +5,10 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { EVBadge } from '@/components/ev-badge';
 import { generateParlays } from '@/lib/mock-data';
+import { usePreferencesStore } from '@/lib/store/preferences';
 import { Parlay, PropOpportunity } from '@/lib/types';
 import { formatOdds } from '@/lib/odds-calculator';
-import { Layers, AlertTriangle, Sparkles, Copy } from 'lucide-react';
+import { Layers, AlertTriangle, Sparkles, Copy, AlertCircle } from 'lucide-react';
 import { useMemo } from 'react';
 
 function ParlayCard({ parlay }: { parlay: Parlay }) {
@@ -130,18 +131,22 @@ Best Book: ${parlay.bestBook}`;
 }
 
 export default function ParlayPage() {
+  const { useMockData } = usePreferencesStore();
   const parlays = useMemo(() => generateParlays(8), []);
 
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="text-4xl font-bold mb-2 bg-gradient-to-r from-orange-500 to-red-600 bg-clip-text text-transparent">
-          Parlay Builder
-        </h1>
-        <p className="text-muted-foreground">
-          AI-assisted parlay suggestions with correlation analysis
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-4xl font-bold mb-2 bg-gradient-to-r from-orange-500 to-red-600 bg-clip-text text-transparent">
+            Parlay Builder
+          </h1>
+          <p className="text-muted-foreground">
+            AI-assisted parlay suggestions with correlation analysis
+          </p>
+        </div>
+        <Badge variant="secondary">Demo Data</Badge>
       </div>
 
       {/* Info Card */}

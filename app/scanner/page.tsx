@@ -5,32 +5,60 @@ import { OpportunityCard } from '@/components/opportunity-card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { generateEVOpportunities } from '@/lib/mock-data';
+import { useEVOpportunities } from '@/lib/hooks/useEVOpportunities';
+import { usePreferencesStore } from '@/lib/store/preferences';
 import { FilterOptions, Sport, BetType, ConfidenceLevel } from '@/lib/types';
-import { Filter, RefreshCw } from 'lucide-react';
+import { Filter, RefreshCw, AlertCircle } from 'lucide-react';
 import { useMemo, useState } from 'react';
 
 export default function ScannerPage() {
   const [filters, setFilters] = useState<FilterOptions>({
     minEV: 3,
   });
-  const [isRefreshing, setIsRefreshing] = useState(false);
+  const { useMockData } = usePreferencesStore();
 
-  const allOpportunities = useMemo(() => generateEVOpportunities(20), []);
+  // Fetch real data for both NBA and NHL
+  const nbaQuery = useEVOpportunities('nba', filters);
+  const nhlQuery = useEVOpportunities('nhl', filters);
+
+  // Mock data fallback
+  const mockOpportunities = useMemo(() => generateEVOpportunities(20), []);
   
-  const filteredOpportunities = useMemo(() => {
-    return allOpportunities.filter(opp => {
+  const filteredMockOpportunities = useMemo(() => {
+    return mockOpportunities.filter(opp => {
       if (filters.minEV && opp.estimatedEV < filters.minEV) return false;
       if (filters.sport && opp.sport !== filters.sport) return false;
       if (filters.betType && opp.betType !== filters.betType) return false;
       if (filters.confidence && !filters.confidence.includes(opp.confidence)) return false;
       return true;
     });
-  }, [allOpportunities, filters]);
+  }, [mockOpportunities, filters]);
+
+  // Use mock or real data based on preference
+  const isLoading = useMockData ? false : (nbaQuery.isLoading || nhlQuery.isLoading);
+  const error = useMockData ? null : (nbaQuery.error || nhlQuery.error);
+  
+  const allOpportunities = useMemo(() => {
+    if (useMockData) {
+      return filteredMockOpportunities;
+    }
+    
+    const combined = [
+      ...(nbaQuery.opportunities || []),
+      ...(nhlQuery.opportunities || []),
+    ];
+    
+    return combined.sort((a, b) => b.estimatedEV - a.estimatedEV);
+  }, [useMockData, filteredMockOpportunities, nbaQuery.opportunities, nhlQuery.opportunities]);
 
   const handleRefresh = () => {
-    setIsRefreshing(true);
-    setTimeout(() => setIsRefreshing(false), 1000);
+    if (!useMockData) {
+      nbaQuery.refetch();
+      nhlQuery.refetch();
+    }
   };
+
+  const lastUpdated = useMockData ? null : (nbaQuery.lastUpdated || nhlQuery.lastUpdated);
 
   return (
     <div className="space-y-6">
@@ -44,11 +72,39 @@ export default function ScannerPage() {
             Positive expected value opportunities across all markets
           </p>
         </div>
-        <Button onClick={handleRefresh} disabled={isRefreshing}>
-          <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
-          Refresh
-        </Button>
+        <div className="flex items-center gap-2">
+          {useMockData && (
+            <Badge variant="secondary">Demo Mode</Badge>
+          )}
+          {lastUpdated && (
+            <span className="text-sm text-muted-foreground">
+              Updated: {new Date(lastUpdated).toLocaleTimeString()}
+            </span>
+          )}
+          <Button onClick={handleRefresh} disabled={isLoading}>
+            <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
+            Refresh
+          </Button>
+        </div>
       </div>
+
+      {/* Error Message */}
+      {error && (
+        <Card className="border-red-500/50 bg-red-500/5">
+          <CardContent className="pt-6">
+            <div className="flex items-start gap-2">
+              <AlertCircle className="h-5 w-5 text-red-500 mt-0.5" />
+              <div className="text-sm">
+                <p className="font-semibold text-red-500">Failed to fetch live data</p>
+                <p className="text-muted-foreground mt-1">
+                  {(error as Error)?.message || 'Unknown error occurred'}. 
+                  You can enable Demo Mode in settings to continue using the app.
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Filters */}
       <Card>
@@ -151,12 +207,25 @@ export default function ScannerPage() {
       <div>
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-xl font-semibold">
-            Found {filteredOpportunities.length} Opportunities
+            {isLoading ? (
+              'Loading...'
+            ) : (
+              `Found ${allOpportunities.length} Opportunities`
+            )}
           </h2>
-          <Badge variant="outline">Live</Badge>
+          <Badge variant="outline">{useMockData ? 'Demo' : 'Live'}</Badge>
         </div>
 
-        {filteredOpportunities.length === 0 ? (
+        {isLoading ? (
+          <Card>
+            <CardContent className="py-12 text-center">
+              <RefreshCw className="h-8 w-8 animate-spin mx-auto mb-4 text-muted-foreground" />
+              <p className="text-muted-foreground">
+                Fetching live odds data...
+              </p>
+            </CardContent>
+          </Card>
+        ) : allOpportunities.length === 0 ? (
           <Card>
             <CardContent className="py-12 text-center">
               <p className="text-muted-foreground">
@@ -166,7 +235,7 @@ export default function ScannerPage() {
           </Card>
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            {filteredOpportunities.map((opportunity) => (
+            {allOpportunities.map((opportunity) => (
               <OpportunityCard key={opportunity.id} opportunity={opportunity} />
             ))}
           </div>
