@@ -27,10 +27,10 @@ const defaultPreferences: UserPreferences = {
   darkMode: true,
 };
 
-// Check if we should use mock data from env or default to true
+// Check if we should use mock data from env or default to false (live mode)
 const getDefaultMockDataSetting = () => {
   const envSetting = process.env.NEXT_PUBLIC_USE_MOCK_DATA;
-  return envSetting !== 'false'; // Default to true unless explicitly set to false
+  return envSetting === 'true'; // Default to false (live mode) unless explicitly set to true
 };
 
 export const usePreferencesStore = create<PreferencesStore>()(
