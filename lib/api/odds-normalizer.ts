@@ -16,6 +16,20 @@ import {
   decimalToAmerican,
 } from '../odds-calculator';
 
+// Slippage buffer percentage
+const SLIPPAGE_BUFFER = 0.85; // 15% slippage
+
+// Confidence thresholds
+const HIGH_CONFIDENCE_EV_THRESHOLD = 10;
+const MEDIUM_CONFIDENCE_EV_THRESHOLD = 5;
+const HIGH_CONFIDENCE_MIN_BOOKS = 5;
+const MEDIUM_CONFIDENCE_MIN_BOOKS = 3;
+const LOW_DISAGREEMENT_THRESHOLD = 0.05;
+
+// Stability and volatility scaling
+const STABILITY_MAX_MINUTES = 60; // 60+ minutes = 0 stability
+const VOLATILITY_SCALE_FACTOR = 500; // 0.20 disagreement = 100 volatility
+
 // Map The Odds API bookmaker keys to our Ontario sportsbook names
 const BOOKMAKER_MAP: Record<string, OntarioSportsbook | null> = {
   'bet365': 'bet365',
@@ -173,10 +187,10 @@ export function calculateConfidence(
   lineDisagreement: number
 ): ConfidenceLevel {
   // High confidence: High EV, many books, low disagreement
-  if (ev >= 10 && lineCount >= 5 && lineDisagreement < 0.05) return 'High';
+  if (ev >= HIGH_CONFIDENCE_EV_THRESHOLD && lineCount >= HIGH_CONFIDENCE_MIN_BOOKS && lineDisagreement < LOW_DISAGREEMENT_THRESHOLD) return 'High';
   
   // Medium confidence: Moderate EV and book count
-  if (ev >= 5 && lineCount >= 3) return 'Medium';
+  if (ev >= MEDIUM_CONFIDENCE_EV_THRESHOLD && lineCount >= MEDIUM_CONFIDENCE_MIN_BOOKS) return 'Medium';
   
   // Low confidence: Lower EV or fewer books
   return 'Low';
@@ -212,7 +226,7 @@ export function calculateStabilityScore(lines: SportsbookLine[]): number {
 
   // Convert to 0-100 scale (lower minutes = higher score)
   // 0 minutes = 100, 60+ minutes = 0
-  return Math.max(0, Math.min(100, 100 - avgMinutesSinceUpdate * (100 / 60)));
+  return Math.max(0, Math.min(100, 100 - avgMinutesSinceUpdate * (100 / STABILITY_MAX_MINUTES)));
 }
 
 /**
@@ -223,7 +237,7 @@ export function calculateVolatilityScore(lines: SportsbookLine[]): number {
   const disagreement = calculateLineDisagreement(lines);
   // Convert to 0-100 scale
   // 0 disagreement = 0, 0.20+ disagreement = 100
-  return Math.min(100, disagreement * 500);
+  return Math.min(100, disagreement * VOLATILITY_SCALE_FACTOR);
 }
 
 /**
@@ -279,7 +293,7 @@ export function normalizeToEVOpportunity(
   const volatilityScore = calculateVolatilityScore(lines);
 
   // Apply slippage (conservative adjustment)
-  const slippageAdjustedEV = ev * 0.85; // 15% slippage buffer
+  const slippageAdjustedEV = ev * SLIPPAGE_BUFFER;
 
   return {
     id: `${event.id}_${marketKey}_${outcomeName.replace(/\s+/g, '_')}`,

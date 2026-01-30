@@ -29,7 +29,6 @@ const defaultPreferences: UserPreferences = {
 
 // Check if we should use mock data from env or default to true
 const getDefaultMockDataSetting = () => {
-  if (typeof window === 'undefined') return true;
   const envSetting = process.env.NEXT_PUBLIC_USE_MOCK_DATA;
   return envSetting !== 'false'; // Default to true unless explicitly set to false
 };
