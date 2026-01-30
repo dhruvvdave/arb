@@ -5,14 +5,21 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { generatePlayerStats, generateTeamStats } from '@/lib/mock-data';
 import { usePreferencesStore } from '@/lib/store/preferences';
-import { BarChart3, User, Users, AlertCircle } from 'lucide-react';
+import { BarChart3, User, Users, AlertCircle, RefreshCw } from 'lucide-react';
 import { useMemo, useState } from 'react';
 
 export default function StatsPage() {
   const [activeTab, setActiveTab] = useState<'players' | 'teams'>('players');
   const { useMockData } = usePreferencesStore();
+  
+  // Mock data for demo mode
   const playerStats = useMemo(() => generatePlayerStats('player_lebron_james', 'NBA'), []);
   const teamStats = useMemo(() => generateTeamStats('lakers', 'NBA'), []);
+
+  // For live mode, we would fetch real stats here
+  // Currently showing demo data with a notice
+  const isLoading = false;
+  const error = null;
 
   return (
     <div className="space-y-6">
@@ -26,23 +33,46 @@ export default function StatsPage() {
             Deep dive into player and team statistics
           </p>
         </div>
-        <Badge variant="secondary">Demo Data</Badge>
+        {useMockData && (
+          <Badge variant="secondary">Demo Mode</Badge>
+        )}
       </div>
 
-      {/* Info Notice */}
-      <Card className="border-blue-500/50 bg-blue-500/5">
-        <CardContent className="pt-6">
-          <div className="flex items-start gap-2">
-            <AlertCircle className="h-5 w-5 text-blue-500 mt-0.5" />
-            <div className="text-sm">
-              <p className="font-semibold text-blue-500">Stats Data Notice</p>
-              <p className="text-muted-foreground mt-1">
-                Currently showing demo stats data. Live stats integration will use free APIs like balldontlie.io (NBA) and NHL-API.
-              </p>
+      {/* Error Message */}
+      {error && (
+        <Card className="border-red-500/50 bg-red-500/5">
+          <CardContent className="pt-6">
+            <div className="flex items-start gap-2">
+              <AlertCircle className="h-5 w-5 text-red-500 mt-0.5" />
+              <div className="text-sm">
+                <p className="font-semibold text-red-500">Failed to fetch live stats</p>
+                <p className="text-muted-foreground mt-1">
+                  {(error as Error)?.message || 'Unknown error occurred'}. 
+                  Enable Demo Mode in settings to continue using the app.
+                </p>
+              </div>
             </div>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Info Notice */}
+      {!useMockData && (
+        <Card className="border-blue-500/50 bg-blue-500/5">
+          <CardContent className="pt-6">
+            <div className="flex items-start gap-2">
+              <AlertCircle className="h-5 w-5 text-blue-500 mt-0.5" />
+              <div className="text-sm">
+                <p className="font-semibold text-blue-500">Stats Data Notice</p>
+                <p className="text-muted-foreground mt-1">
+                  Stats page is currently in development. Live stats integration with balldontlie.io (NBA) and NHL-API will be available soon.
+                  Showing demo data for now.
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Tab Controls */}
       <div className="flex gap-2">
