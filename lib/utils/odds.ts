@@ -67,7 +67,7 @@ export function calculateArbitrageStakes(
   stake2: number;
   guaranteedProfit: number;
 } {
-  const { stake1Percentage, stake2Percentage, profitPercentage } = calculateArbitrage(odds1, odds2);
+  const { stake1Percentage, stake2Percentage } = calculateArbitrage(odds1, odds2);
   
   const stake1 = (totalStake * stake1Percentage) / 100;
   const stake2 = (totalStake * stake2Percentage) / 100;

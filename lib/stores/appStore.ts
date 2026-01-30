@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import type { UserSettings, BetRecord, Sportsbook } from '@/types';
+import type { UserSettings, BetRecord } from '@/types';
 
 interface AppState {
   // Settings
