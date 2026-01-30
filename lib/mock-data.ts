@@ -14,6 +14,26 @@ import {
 } from './types';
 import { createOddsObject, calculateEV, estimateFairProbability, calculateParlayOdds, calculateParlayEV } from './odds-calculator';
 
+// Seeded random number generator for consistent SSR/client rendering
+class SeededRandom {
+  private seed: number;
+
+  constructor(seed: number) {
+    this.seed = seed;
+  }
+
+  next(): number {
+    this.seed = (this.seed * 9301 + 49297) % 233280;
+    return this.seed / 233280;
+  }
+
+  reset(seed: number) {
+    this.seed = seed;
+  }
+}
+
+const rng = new SeededRandom(12345); // Fixed seed for deterministic output
+
 const NBA_TEAMS = [
   'Lakers', 'Celtics', 'Warriors', 'Bucks', 'Heat', 'Nuggets', 'Suns', '76ers',
   'Mavericks', 'Clippers', 'Knicks', 'Nets', 'Raptors', 'Bulls', 'Hawks', 'Cavaliers'
@@ -44,15 +64,15 @@ const NHL_PLAYERS = [
 ];
 
 function randomElement<T>(array: T[]): T {
-  return array[Math.floor(Math.random() * array.length)];
+  return array[Math.floor(rng.next() * array.length)];
 }
 
 function randomInt(min: number, max: number): number {
-  return Math.floor(Math.random() * (max - min + 1)) + min;
+  return Math.floor(rng.next() * (max - min + 1)) + min;
 }
 
 function randomFloat(min: number, max: number, decimals: number = 1): number {
-  return parseFloat((Math.random() * (max - min) + min).toFixed(decimals));
+  return parseFloat((rng.next() * (max - min) + min).toFixed(decimals));
 }
 
 function generateGameId(): string {
@@ -90,7 +110,7 @@ function generatePlayer(sport: Sport): PlayerInfo {
 }
 
 function generateSportsbookLines(baseOdds: number, count: number = 5) {
-  const books = [...ONTARIO_SPORTSBOOKS].sort(() => Math.random() - 0.5).slice(0, count) as OntarioSportsbook[];
+  const books = [...ONTARIO_SPORTSBOOKS].sort(() => rng.next() - 0.5).slice(0, count) as OntarioSportsbook[];
   
   return books.map(book => ({
     sportsbook: book,
@@ -100,6 +120,7 @@ function generateSportsbookLines(baseOdds: number, count: number = 5) {
 }
 
 export function generateEVOpportunities(count: number = 10): EVOpportunity[] {
+  rng.reset(12345); // Reset seed for consistency
   const opportunities: EVOpportunity[] = [];
   
   for (let i = 0; i < count; i++) {
@@ -137,6 +158,7 @@ export function generateEVOpportunities(count: number = 10): EVOpportunity[] {
 }
 
 export function generatePropOpportunities(count: number = 15): PropOpportunity[] {
+  rng.reset(54321); // Reset seed for consistency (different from EV opps)
   const opportunities: PropOpportunity[] = [];
   
   for (let i = 0; i < count; i++) {
@@ -194,7 +216,7 @@ export function generatePropOpportunities(count: number = 15): PropOpportunity[]
         home: line + randomFloat(-1, 2, 1),
         away: line + randomFloat(-2, 1, 1),
       },
-      isBackToBack: Math.random() < 0.2,
+      isBackToBack: rng.next() < 0.2,
       opponentPace: sport === 'NBA' ? randomFloat(95, 105, 1) : undefined,
       minutesTrend: sport === 'NBA' ? randomFloat(28, 38, 1) : randomFloat(16, 22, 1),
     };
@@ -212,7 +234,7 @@ export function generatePropOpportunities(count: number = 15): PropOpportunity[]
       estimatedEV: ev,
       confidence: ev > 6 ? 'High' : ev > 3 ? 'Medium' : 'Low',
       detectedAt: new Date(Date.now() - randomInt(5, 180) * 60 * 1000),
-      insight: Math.random() > 0.5 ? `${player.name} has hit this in ${Math.floor(atLineRate * 10)} of last 10 games. ${context.defenseVsPosition <= 10 ? 'Opponent ranks bottom 10 vs ' + player.position + 's.' : ''}` : undefined,
+      insight: rng.next() > 0.5 ? `${player.name} has hit this in ${Math.floor(atLineRate * 10)} of last 10 games. ${context.defenseVsPosition <= 10 ? 'Opponent ranks bottom 10 vs ' + player.position + 's.' : ''}` : undefined,
     });
   }
   
@@ -220,6 +242,7 @@ export function generatePropOpportunities(count: number = 15): PropOpportunity[]
 }
 
 export function generateParlays(count: number = 5): Parlay[] {
+  rng.reset(67890); // Reset seed for consistency
   const parlays: Parlay[] = [];
   const props = generatePropOpportunities(20);
   
@@ -270,6 +293,7 @@ function decimalToAmerican(decimal: number): number {
 }
 
 export function generatePlayerStats(playerId: string, sport: Sport): PlayerStats {
+  rng.reset(11111); // Reset seed for consistency
   const baseStats: Record<string, number> = sport === 'NBA' 
     ? { points: 24.5, rebounds: 6.8, assists: 5.2, steals: 1.3, blocks: 0.8, '3pm': 2.1 }
     : { goals: 0.8, assists: 1.2, points: 2.0, shots: 3.5, hits: 2.8 };
@@ -306,6 +330,7 @@ export function generatePlayerStats(playerId: string, sport: Sport): PlayerStats
 }
 
 export function generateTeamStats(teamId: string, sport: Sport): TeamStats {
+  rng.reset(22222); // Reset seed for consistency
   return {
     teamId,
     pace: sport === 'NBA' ? randomFloat(95, 105, 1) : randomFloat(55, 65, 1),
@@ -323,6 +348,7 @@ export function generateTeamStats(teamId: string, sport: Sport): TeamStats {
 }
 
 export function generateAlerts(count: number = 5): Alert[] {
+  rng.reset(33333); // Reset seed for consistency
   const opportunities = generateEVOpportunities(count);
   
   return opportunities.map((opp, i) => ({
@@ -331,6 +357,6 @@ export function generateAlerts(count: number = 5): Alert[] {
     opportunity: opp,
     message: `${opp.description} - ${opp.estimatedEV > 0 ? '+' : ''}${opp.estimatedEV.toFixed(1)}% EV detected`,
     timestamp: new Date(Date.now() - randomInt(1, 60) * 60 * 1000),
-    read: Math.random() > 0.5,
+    read: rng.next() > 0.5,
   }));
 }
