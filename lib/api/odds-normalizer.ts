@@ -13,6 +13,7 @@ import {
   calculateEV,
   estimateFairProbability,
   removeVig,
+  decimalToAmerican,
 } from '../odds-calculator';
 
 // Map The Odds API bookmaker keys to our Ontario sportsbook names
@@ -128,7 +129,7 @@ export function normalizeSportsbookLines(
 
       lines.push({
         sportsbook: sportsbookName,
-        odds: createOddsObject(outcome.price, 'decimal'),
+        odds: createOddsObject(decimalToAmerican(outcome.price)),
         line: outcome.point,
         lastUpdated: bookmaker.last_update
           ? new Date(bookmaker.last_update)
@@ -266,12 +267,8 @@ export function normalizeToEVOpportunity(
   const bestBook = findBestBook(lines);
   const bestOdds = lines.find((l) => l.sportsbook === bestBook)!.odds;
   
-  // Calculate EV
-  const ev = calculateEV(
-    bestOdds.impliedProbability,
-    fairProb,
-    bestOdds.decimal
-  );
+  // Calculate EV (fairProb * odds - 1) * 100
+  const ev = calculateEV(fairProb, bestOdds.decimal);
 
   // Only return if positive EV
   if (ev <= 0) return null;

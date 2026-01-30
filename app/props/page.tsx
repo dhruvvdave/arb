@@ -5,9 +5,10 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { EVBadge } from '@/components/ev-badge';
 import { generatePropOpportunities } from '@/lib/mock-data';
+import { usePreferencesStore } from '@/lib/store/preferences';
 import { PropOpportunity, Sport, PropCategory } from '@/lib/types';
 import { formatOdds } from '@/lib/odds-calculator';
-import { Target, TrendingUp, Activity, Copy, ChevronDown } from 'lucide-react';
+import { Target, TrendingUp, Activity, Copy, ChevronDown, RefreshCw, AlertCircle } from 'lucide-react';
 import { useMemo, useState } from 'react';
 
 function PropCard({ prop }: { prop: PropOpportunity }) {
@@ -192,7 +193,9 @@ Est. EV: ${prop.estimatedEV > 0 ? '+' : ''}${prop.estimatedEV.toFixed(1)}%`;
 export default function PropsPage() {
   const [sportFilter, setSportFilter] = useState<Sport | undefined>();
   const [categoryFilter, setCategoryFilter] = useState<PropCategory | undefined>();
+  const { useMockData } = usePreferencesStore();
 
+  // Mock data only for now (real props API needs event-specific calls)
   const allProps = useMemo(() => generatePropOpportunities(20), []);
   
   const filteredProps = useMemo(() => {
@@ -206,14 +209,33 @@ export default function PropsPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="text-4xl font-bold mb-2 bg-gradient-to-r from-purple-500 to-pink-600 bg-clip-text text-transparent">
-          Prop Intelligence
-        </h1>
-        <p className="text-muted-foreground">
-          Player prop analysis with historical context and insights
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-4xl font-bold mb-2 bg-gradient-to-r from-purple-500 to-pink-600 bg-clip-text text-transparent">
+            Prop Intelligence
+          </h1>
+          <p className="text-muted-foreground">
+            Player prop analysis with historical context and insights
+          </p>
+        </div>
+        <Badge variant="secondary">Demo Data</Badge>
       </div>
+
+      {/* Info Notice */}
+      <Card className="border-blue-500/50 bg-blue-500/5">
+        <CardContent className="pt-6">
+          <div className="flex items-start gap-2">
+            <AlertCircle className="h-5 w-5 text-blue-500 mt-0.5" />
+            <div className="text-sm">
+              <p className="font-semibold text-blue-500">Demo Data Notice</p>
+              <p className="text-muted-foreground mt-1">
+                Player props require event-specific API calls. Currently showing demo data. 
+                Live props will be available once specific games are selected.
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Filters */}
       <Card>

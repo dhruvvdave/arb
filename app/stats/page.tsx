@@ -2,26 +2,47 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { generatePlayerStats, generateTeamStats } from '@/lib/mock-data';
-import { BarChart3, User, Users } from 'lucide-react';
+import { usePreferencesStore } from '@/lib/store/preferences';
+import { BarChart3, User, Users, AlertCircle } from 'lucide-react';
 import { useMemo, useState } from 'react';
 
 export default function StatsPage() {
   const [activeTab, setActiveTab] = useState<'players' | 'teams'>('players');
+  const { useMockData } = usePreferencesStore();
   const playerStats = useMemo(() => generatePlayerStats('player_lebron_james', 'NBA'), []);
   const teamStats = useMemo(() => generateTeamStats('lakers', 'NBA'), []);
 
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="text-4xl font-bold mb-2 bg-gradient-to-r from-blue-500 to-cyan-600 bg-clip-text text-transparent">
-          Stats Analyzer
-        </h1>
-        <p className="text-muted-foreground">
-          Deep dive into player and team statistics
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-4xl font-bold mb-2 bg-gradient-to-r from-blue-500 to-cyan-600 bg-clip-text text-transparent">
+            Stats Analyzer
+          </h1>
+          <p className="text-muted-foreground">
+            Deep dive into player and team statistics
+          </p>
+        </div>
+        <Badge variant="secondary">Demo Data</Badge>
       </div>
+
+      {/* Info Notice */}
+      <Card className="border-blue-500/50 bg-blue-500/5">
+        <CardContent className="pt-6">
+          <div className="flex items-start gap-2">
+            <AlertCircle className="h-5 w-5 text-blue-500 mt-0.5" />
+            <div className="text-sm">
+              <p className="font-semibold text-blue-500">Stats Data Notice</p>
+              <p className="text-muted-foreground mt-1">
+                Currently showing demo stats data. Live stats integration will use free APIs like balldontlie.io (NBA) and NHL-API.
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Tab Controls */}
       <div className="flex gap-2">
